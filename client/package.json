@@ -1,6 +1,7 @@
 {
     "name": "not-ltt-store-client",
     "version": "0.1.0",
+    "proxy": "localhost:5000",
     "private": true,
     "dependencies": {
         "@shopify/app-bridge-utils": "^1.29.0",

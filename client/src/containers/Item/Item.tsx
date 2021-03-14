@@ -60,7 +60,7 @@ export default function Item() {
         <div className="Item">
             <div className="picture">
                 {itemData?.images.map((image: any, id: number) =>
-                    <img key={'image-' + id} id={'image-' + id} src={image.src} />
+                    <img key={'image-' + id} id={'image-' + id} src={image.src} alt={image.alt}/>
                 )}
             </div>
             <div className="detail">

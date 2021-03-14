@@ -6,7 +6,6 @@ export default function FeaturedSection({ data, title }: { data: any, title: str
     const history = useHistory();
 
     function handleItemClick(id: string) {
-        console.log(id);
         history.push('/definitelynotmerch/' + id);
     }
 

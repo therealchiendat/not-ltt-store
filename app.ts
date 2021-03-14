@@ -1,5 +1,6 @@
 const http = require('http');
 const express = require('express');
+const path = require('path');
 const fetch = require('node-fetch');
 const bodyParser = require('body-parser')
 const session = require('express-session');
@@ -25,10 +26,11 @@ const sessionOptions = {
 
 app.use(session(sessionOptions))
 
-//Default endpoint. Generates a password for the session if not already created
-app.post('api/init', function (req, res, next) {
+/**
+ * Create a user session for each variant id provided
+ */
+app.post('/api/init', function (req, res, next) {
     // Access the session as req.session
-    console.log(req.session.userSession);
     const variantID = req.body.id;
     const password = Math.floor(Math.random() * Math.floor(1000));
     // Check validity:
@@ -69,10 +71,7 @@ app.post('api/init', function (req, res, next) {
  * Expects the password attempt in the body. 
  * Returns HIGH, LOW or SUCCESS
  * */
-app.post('api/attempt', async function (req, res, next) {
-    console.log('attempt--');
-    console.log(req.session.userSession)
-    console.log(req.body);
+app.post('/api/attempt', async function (req, res, next) {
     const variantID = req.body.id;
     const variant = req.session.userSession.find((secret) =>
         JSON.stringify(secret.id) === JSON.stringify(variantID)
@@ -111,7 +110,10 @@ app.post('api/attempt', async function (req, res, next) {
 
 })
 
-app.get("api/products", async (req, res) => {
+/**
+ * Get all products
+ */
+app.get("/api/products", async (req, res) => {
     try {
         const shopifyResult = await fetch(`https://not-ltt-store.myshopify.com/admin/api/2021-01/products.json`, {
             method: "GET",
@@ -190,7 +192,7 @@ async function draftOrder(variantID, quantity) {
     }
 }
 
-app.get("api/products/:id", async (req, res) => {
+app.get("/api/products/:id", async (req, res) => {
     // Retrieve the tag from our URL path
     const product_id = req.params.id;
     try {
@@ -216,6 +218,7 @@ app.get("api/products/:id", async (req, res) => {
             images.push({
                 "id": image.id,
                 "product_id": image.product_id,
+                "alt": image.alt,
                 "src": image.src,
                 "variant_ids": image.variant_ids
             })
