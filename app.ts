@@ -108,14 +108,19 @@ app.post('/attempt', async function (req, res, next) {
 })
 
 app.get("/products", async (req, res) => {
-    const shopifyResult = await fetch(`https://not-ltt-store.myshopify.com/admin/api/2021-01/products.json`, {
-        method: "GET",
-        headers: {
-            "X-Shopify-Access-Token": appPassword
-        }
-    })
 
-    const products = await shopifyResult.json()
+    try {
+        const shopifyResult = await fetch(`https://not-ltt-store.myshopify.com/admin/api/2021-01/products.json`, {
+            method: "GET",
+            headers: {
+                "X-Shopify-Access-Token": appPassword
+            }
+        })
+        const products = await shopifyResult.json()
+    } catch (error) {
+        console.log(error);
+    }
+
 
     let productsResult = []
 
@@ -187,15 +192,17 @@ async function draftOrder(variantID, quantity) {
 app.get("/products/:id", async (req, res) => {
     // Retrieve the tag from our URL path
     const product_id = req.params.id;
-    console.log(product_id)
-    const result = await fetch(`https://not-ltt-store.myshopify.com/admin/api/2021-01/products/${product_id}.json`, {
-        method: "GET",
-        headers: {
-            "X-Shopify-Access-Token": appPassword
-        }
-    })
-
-    const product = await result.json()
+    try {
+        const result = await fetch(`https://not-ltt-store.myshopify.com/admin/api/2021-01/products/${product_id}.json`, {
+            method: "GET",
+            headers: {
+                "X-Shopify-Access-Token": appPassword
+            }
+        })
+        const product = await result.json()
+    } catch (error) {
+        console.log(error);
+    }
 
     let variants = []
     product.product.variants.forEach(variant => {
