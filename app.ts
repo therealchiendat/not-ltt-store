@@ -12,8 +12,8 @@ const appPassword = process.env.SHOPIFY_APP_PASSWORD;
 
 const app = express()
 
-const hostname = '127.0.0.1';
-const port = 3000;
+// process.env.PORT lets the port be set by Heroku
+const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json())
 
@@ -271,6 +271,6 @@ app.use((err, req, res, next) => {
     res.status(err.httpStatusCode || 400).json({ message: err.message })
 })
 
-app.listen(port, hostname, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}/`);
 });
