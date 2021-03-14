@@ -8,11 +8,6 @@ const dotenv = require('dotenv').config();
 const cookie = require('cookie');
 const nonce = require('nonce');
 
-const apiKey = process.env.SHOPIFY_API_KEY;
-const apiSecret = process.env.SPHIFY_API_SECRET;
-const scopes = process.env.SHOPIFY_API_SCOPES;
-const forwardingAddress = process.env.SHOPIFY_APP_URL;
-
 const appPassword = process.env.SHOPIFY_APP_PASSWORD;
 
 const app = express()
