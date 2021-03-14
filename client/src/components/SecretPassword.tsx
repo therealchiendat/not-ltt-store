@@ -8,6 +8,8 @@ export default function SecretPasswor({ variantID, callBack }) {
     const [correctGuessed, setCorrectGuessed] = useState<boolean>(false);
     const [discountedURL, setDiscountedURL] = useState<string>('');
     const [attempt, setAttempt] = useState<number>(0);
+    const [serverMessage, setServerMessage] = useState<string>('');
+
     useEffect(() => {
         init()
     }, []);
@@ -53,6 +55,7 @@ export default function SecretPasswor({ variantID, callBack }) {
             body: JSON.stringify(reqBody)
         })
         const parsedResult = await result.json();
+        if (parsedResult.message) setServerMessage(parsedResult.message);
         setAttempt(parsedResult.attempt);
         if (parsedResult.message === 'high') {
             setHighPW(guessedPW);
@@ -76,12 +79,13 @@ export default function SecretPasswor({ variantID, callBack }) {
                 <div className="secret-form">
                     <div className="instruction">
                         <p>The password is between 0-1000;</p>
-                        <p>You have {10-attempt} tries left to find the secret password</p>
+                        <p>You have {10 - attempt} tries left to find the secret password</p>
                     </div>
                     <form className="content" onSubmit={handleSubmit}>
                         <span>{lowPW}-[<input value={guessedPW} onChange={handlePWChange}></input>]-{highPW}</span>
                         <button type="submit">Submit</button>
                     </form>
+                    <p className="server-message">{serverMessage}</p>
                 </div>
                 : <button type="button" onClick={handleDiscountClick}>Let's Get Discounted! &gt;</button>
             }

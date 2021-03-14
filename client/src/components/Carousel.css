@@ -45,11 +45,9 @@
 
 .carousel {
     position: relative;
-    filter: drop-shadow(0 0 10px #0003);
     perspective: 100px;
     box-sizing: border-box;
     scrollbar-color: transparent transparent;
-    /* thumb and track color */
     scrollbar-width: 0px;
 }
 

@@ -101,7 +101,6 @@ app.post('/api/attempt', async function (req, res, next) {
             const order = await draftOrder(variantID, quantity);
             variant.url = order.draft_order.invoice_url;
             req.session.totalAttempt += 1;
-            console.log(order);
             res.status(200).send({ message: 'correct', attempt: attempt, data: order.draft_order.invoice_url });
         } catch (error) {
             res.status(500).send(error);

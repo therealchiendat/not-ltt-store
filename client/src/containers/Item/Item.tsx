@@ -71,12 +71,12 @@ export default function Item() {
                 </div>
                 <div className="content">
                     <div className="variants">
-                        Available Love Language:
+                        Available Love Language (Choose One):
                         <div>
                             {
                                 itemData?.variants.map(
                                     (variant: any, i: number) =>
-                                        <div key={variant.id} className="radio-button-item">
+                                        <div key={variant.id} className="radio-button-item pointer">
                                             <input type="radio" name="id-type"
                                                 id={variant.id}
                                                 value={variant.id}

@@ -7,7 +7,7 @@
 
 .Item .picture {
     display: flex;
-    flex-basis: 50%;
+    flex-basis: 45%;
     flex-direction: column;
 }
 
@@ -22,7 +22,7 @@
     top: 100px;
     height: fit-content;
     display: flex;
-    flex-basis: 25%;
+    flex-basis: 35%;
     flex-direction: column;
 }
 
