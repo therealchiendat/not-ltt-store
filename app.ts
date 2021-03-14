@@ -7,13 +7,14 @@ const { request } = require('express');
 const dotenv = require('dotenv').config();
 const cookie = require('cookie');
 const nonce = require('nonce');
+const MongoStore = require('connect-mongo');
 
 const appPassword = process.env.SHOPIFY_APP_PASSWORD;
 
 const app = express()
 
 // process.env.PORT lets the port be set by Heroku
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 app.use(bodyParser.json())
 
@@ -28,30 +29,24 @@ const sessionOptions = {
 
 app.use(session(sessionOptions))
 
-app.get('/kickout', (req, res, next) => {
-    res.setHeader('Content-Type', 'text/html')
-    res.write('<p>OH NO... You have already tried TEN TIMES </p>')
-    res.write('<p>Sorry, go to sleep. No discount for you.</p>')
-    req.session.destroy()
-    console.log('Kicking you out')
-    res.end()
-})
-
 //Default endpoint. Generates a password for the session if not already created
 app.post('/init', function (req, res, next) {
     // Access the session as req.session
-    console.log('----')
+    console.log(req.session.userSession);
     const variantID = req.body.id;
-    console.log(variantID);
     const password = Math.floor(Math.random() * Math.floor(1000));
     // Check validity:
     if (!req.session.userSession) {
         req.session.userSession = [{
             id: variantID,
             attempt: 1,
-            password: password
-        }]
-        res.status(200).send('yay');
+            password: password,
+            url: null // This one is for when the draft order is done
+        }];
+        req.session.correctAttempt = 0;
+        res.status(200).send({ message: 'ok' });
+    } else if (req.session.totalAttempt > 2) {
+        res.status(422).send({ message: 'You are a good guesser but we are poor :< sorry only two discounts per person :( ' });
     } else {
         const variant = req.session.userSession.find((secret) =>
             JSON.stringify(secret.id) === JSON.stringify(variantID)
@@ -60,20 +55,26 @@ app.post('/init', function (req, res, next) {
             req.session.userSession.push({
                 id: variantID,
                 attempt: 1,
-                password: password
+                password: password,
+                url: null
             })
-            res.status(200).send('yay 2');
+            res.status(200).send({ message: 'ok' });
+        } else if (variant.url !== null) {
+            res.status(409).send({ message: 'You already guessed this correctly, stop guessing!', data: variant.url });
+        } else if (variant.attempt > 10) {
+            res.status(422).send({ message: 'You have guessed too many attempts for this variant' });
         } else {
-            res.status(200).send(['keep guessing id:', variantID]);
+            res.status(200).send({ message: 'keep guessing' });
         }
     }
-})
+});
 
 /**Attempt endpoint. 
  * Expects the password attempt in the body. 
  * Returns HIGH, LOW or SUCCESS
  * */
 app.post('/attempt', async function (req, res, next) {
+    console.log('attempt--');
     console.log(req.session.userSession)
     console.log(req.body);
     const variantID = req.body.id;
@@ -81,38 +82,40 @@ app.post('/attempt', async function (req, res, next) {
         JSON.stringify(secret.id) === JSON.stringify(variantID)
     );
     const attempt = variant.attempt;
-    if (attempt > 10) {
-        res.status(422).send({ message: 'You have guessed too many attempts for this variant' })
+    if (variant.url !== null) {
+        res.status(409).send({ message: 'You already guessed this correctly, stop guessing!', data: variant.url });
+    } else if (attempt > 10) {
+        res.status(422).send({ message: 'You have guessed too many attempts for this variant' });
     }
 
     const answer = parseInt(variant.password);
     const guessed = parseInt(req.body.password);
-    console.log(guessed, answer);
+
     if (guessed > answer) {
-        console.log('high')
+        // Too High!
         variant.attempt++;
         res.status(200).send({ message: 'high', attempt: attempt })
     } else if (guessed < answer) {
-        console.log('low')
+        // Too Low!
         variant.attempt++;
         res.status(200).send({ message: 'low', attempt: attempt })
     } else if (guessed == answer) {
-        console.log('correct');
         // Callback for draftorder here!
         const quantity = 1
         try {
             const order = await draftOrder(variantID, quantity);
-            console.log('draft order:', order);
+            variant.url = order.draft_order.invoice_url;
+            req.session.totalAttempt += 1;
+            console.log(order);
+            res.status(200).send({ message: 'correct', attempt: attempt, data: order.draft_order.invoice_url });
         } catch (error) {
-            console.log(error);
+            res.status(500).send(error);
         }
-        res.status(200).send(order);
     }
 
 })
 
 app.get("/products", async (req, res) => {
-
     try {
         const shopifyResult = await fetch(`https://not-ltt-store.myshopify.com/admin/api/2021-01/products.json`, {
             method: "GET",
@@ -153,18 +156,13 @@ app.get("/products", async (req, res) => {
             )
         })
 
-
         res.status(200).send(productsResult);
     } catch (error) {
-        console.log(error);
-        res.status(500)
+        res.status(500).send(error);
     }
-
-
 });
 
 async function draftOrder(variantID, quantity) {
-
     const reqBody = {
         "draft_order": {
             "line_items": [
@@ -190,10 +188,10 @@ async function draftOrder(variantID, quantity) {
     };
     try {
         const result = await fetch(`https://not-ltt-store.myshopify.com/admin/api/2021-01/draft_orders.json`, request);
+        return await result.json();
     } catch (error) {
-        console.log(error)
+        throw new Error(error);
     }
-    return await result.json();
 }
 
 app.get("/products/:id", async (req, res) => {
@@ -207,7 +205,6 @@ app.get("/products/:id", async (req, res) => {
             }
         })
         const product = await result.json();
-        console.log('product: ', product);
         let variants = []
         product.product.variants.forEach(variant => {
             variants.push({
@@ -227,9 +224,11 @@ app.get("/products/:id", async (req, res) => {
                 "variant_ids": image.variant_ids
             })
         })
+
         const productsResult = {
             "id": product.product.id,
             "title": product.product.title,
+            "tags": product.product.tags,
             "description": product.product.body_html,
             "variants": variants,
             "images": images
@@ -237,50 +236,10 @@ app.get("/products/:id", async (req, res) => {
 
         res.status(200).send(productsResult);
     } catch (error) {
-        console.log(error);
-        res.status(500)
+        res.status(500).send(error);
     }
 
 });
-
-// app.post("/draftorder", async (req, res) => {
-
-//     const variantId = req.body.variantId;
-//     const quantity = req.body.quantity;
-
-//     const reqBody = {
-//         "draft_order": {
-//             "line_items": [
-//                 {
-//                     "variant_id": variantId,
-//                     "quantity": quantity
-//                 }
-//             ],
-//             "applied_discount": {
-//                 "value_type": "percentage",
-//                 "value": "20"
-//             }
-//         }
-//     }
-
-//     const request = {
-//         method: "POST",
-//         headers: {
-//             'Content-Type': 'application/json',
-//             "X-Shopify-Access-Token": appPassword
-//         },
-//         body: JSON.stringify(reqBody)
-//     };
-
-//     console.log(request);
-//     const result = await fetch(`https://not-ltt-store.myshopify.com/admin/api/2021-01/draft_orders.json`, request)
-
-//     const draftOrder = await result.json()
-//     res.status(200).send(draftOrder);
-//     console.log(draftOrder);
-// });
-
-
 
 // error handling
 app.use((err, req, res, next) => {
