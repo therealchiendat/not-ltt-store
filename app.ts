@@ -100,8 +100,12 @@ app.post('/attempt', async function (req, res, next) {
         console.log('correct');
         // Callback for draftorder here!
         const quantity = 1
-        const order = await draftOrder(variantID, quantity);
-        console.log('draft order:', order);
+        try {
+            const order = await draftOrder(variantID, quantity);
+            console.log('draft order:', order);
+        } catch (error) {
+            console.log(error);
+        }
         res.status(200).send(order);
     }
 
@@ -183,9 +187,11 @@ async function draftOrder(variantID, quantity) {
         },
         body: JSON.stringify(reqBody)
     };
-
-    const result = await fetch(`https://not-ltt-store.myshopify.com/admin/api/2021-01/draft_orders.json`, request);
-
+    try {
+        const result = await fetch(`https://not-ltt-store.myshopify.com/admin/api/2021-01/draft_orders.json`, request);
+    } catch (error) {
+        console.log(error)
+    }
     return await result.json();
 }
 
@@ -234,42 +240,42 @@ app.get("/products/:id", async (req, res) => {
     res.status(200).send(productsResult);
 });
 
-app.post("/draftorder", async (req, res) => {
+// app.post("/draftorder", async (req, res) => {
 
-    const variantId = req.body.variantId;
-    const quantity = req.body.quantity;
+//     const variantId = req.body.variantId;
+//     const quantity = req.body.quantity;
 
-    const reqBody = {
-        "draft_order": {
-            "line_items": [
-                {
-                    "variant_id": variantId,
-                    "quantity": quantity
-                }
-            ],
-            "applied_discount": {
-                "value_type": "percentage",
-                "value": "20"
-            }
-        }
-    }
+//     const reqBody = {
+//         "draft_order": {
+//             "line_items": [
+//                 {
+//                     "variant_id": variantId,
+//                     "quantity": quantity
+//                 }
+//             ],
+//             "applied_discount": {
+//                 "value_type": "percentage",
+//                 "value": "20"
+//             }
+//         }
+//     }
 
-    const request = {
-        method: "POST",
-        headers: {
-            'Content-Type': 'application/json',
-            "X-Shopify-Access-Token": appPassword
-        },
-        body: JSON.stringify(reqBody)
-    };
+//     const request = {
+//         method: "POST",
+//         headers: {
+//             'Content-Type': 'application/json',
+//             "X-Shopify-Access-Token": appPassword
+//         },
+//         body: JSON.stringify(reqBody)
+//     };
 
-    console.log(request);
-    const result = await fetch(`https://not-ltt-store.myshopify.com/admin/api/2021-01/draft_orders.json`, request)
+//     console.log(request);
+//     const result = await fetch(`https://not-ltt-store.myshopify.com/admin/api/2021-01/draft_orders.json`, request)
 
-    const draftOrder = await result.json()
-    res.status(200).send(draftOrder);
-    console.log(draftOrder);
-});
+//     const draftOrder = await result.json()
+//     res.status(200).send(draftOrder);
+//     console.log(draftOrder);
+// });
 
 
 
