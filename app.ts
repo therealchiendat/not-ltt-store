@@ -120,46 +120,47 @@ app.get("/products", async (req, res) => {
                 "X-Shopify-Access-Token": appPassword
             }
         })
-        const products = await shopifyResult.json()
+        const products = await shopifyResult.json();
+        let productsResult = []
+
+        products.products.forEach(product => {
+            let variants = []
+            product.variants.forEach(variant => {
+                variants.push({
+                    "id": variant.id,
+                    "title": variant.title,
+                    "price": variant.price
+                })
+            })
+
+            let images = []
+
+            product.images.forEach(image => {
+                images.push({
+                    "id": image.id,
+                    "product_id": image.product_id,
+                    "src": image.src,
+                    "alt": image.alt,
+                    "variant_ids": image.variant_ids
+                })
+            })
+            productsResult.push({
+                "id": product.id,
+                "title": product.title,
+                "variants": variants,
+                "images": images
+            }
+            )
+        })
+
+
+        res.status(200).send(productsResult);
     } catch (error) {
         console.log(error);
+        res.status(500)
     }
 
 
-    let productsResult = []
-
-    products.products.forEach(product => {
-        let variants = []
-        product.variants.forEach(variant => {
-            variants.push({
-                "id": variant.id,
-                "title": variant.title,
-                "price": variant.price
-            })
-        })
-
-        let images = []
-
-        product.images.forEach(image => {
-            images.push({
-                "id": image.id,
-                "product_id": image.product_id,
-                "src": image.src,
-                "alt": image.alt,
-                "variant_ids": image.variant_ids
-            })
-        })
-        productsResult.push({
-            "id": product.id,
-            "title": product.title,
-            "variants": variants,
-            "images": images
-        }
-        )
-    })
-
-
-    res.status(200).send(productsResult);
 });
 
 async function draftOrder(variantID, quantity) {
@@ -205,39 +206,41 @@ app.get("/products/:id", async (req, res) => {
                 "X-Shopify-Access-Token": appPassword
             }
         })
-        const product = await result.json()
+        const product = await result.json();
+
+        let variants = []
+        product.product.variants.forEach(variant => {
+            variants.push({
+                "id": variant.id,
+                "title": variant.title,
+                "price": variant.price
+            })
+        })
+
+        let images = []
+
+        product.product.images.forEach(image => {
+            images.push({
+                "id": image.id,
+                "product_id": image.product_id,
+                "src": image.src,
+                "variant_ids": image.variant_ids
+            })
+        })
+        const productsResult = {
+            "id": product.product.id,
+            "title": product.product.title,
+            "description": product.product.body_html,
+            "variants": variants,
+            "images": images
+        }
+
+        res.status(200).send(productsResult);
     } catch (error) {
         console.log(error);
+        res.status(500)
     }
 
-    let variants = []
-    product.product.variants.forEach(variant => {
-        variants.push({
-            "id": variant.id,
-            "title": variant.title,
-            "price": variant.price
-        })
-    })
-
-    let images = []
-
-    product.product.images.forEach(image => {
-        images.push({
-            "id": image.id,
-            "product_id": image.product_id,
-            "src": image.src,
-            "variant_ids": image.variant_ids
-        })
-    })
-    const productsResult = {
-        "id": product.product.id,
-        "title": product.product.title,
-        "description": product.product.body_html,
-        "variants": variants,
-        "images": images
-    }
-
-    res.status(200).send(productsResult);
 });
 
 // app.post("/draftorder", async (req, res) => {
