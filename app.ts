@@ -207,7 +207,7 @@ app.get("/products/:id", async (req, res) => {
             }
         })
         const product = await result.json();
-
+        console.log('product: ', product);
         let variants = []
         product.product.variants.forEach(variant => {
             variants.push({
