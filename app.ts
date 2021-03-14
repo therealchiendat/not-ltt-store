@@ -12,17 +12,6 @@ const appPassword = process.env.SHOPIFY_APP_PASSWORD;
 
 const app = express()
 
-// process.env.PORT lets the port be set by Heroku
-const port = process.env.PORT || 8080;
-
-// Allow CORS
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", '*');
-    res.header("Access-Control-Allow-Credentials", true);
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header("Access-Control-Allow-Headers", 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json');
-    next();
-});
 app.use(bodyParser.json())
 
 const sessionOptions = {
@@ -248,10 +237,19 @@ app.get("/products/:id", async (req, res) => {
 
 });
 
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname+'/client/build/index.html'));
+  });
+
 // error handling
 app.use((err, req, res, next) => {
     res.status(err.httpStatusCode || 400).json({ message: err.message })
 })
+
+// process.env.PORT lets the port be set by Heroku
+const port = process.env.PORT || 8080;
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}/`);
