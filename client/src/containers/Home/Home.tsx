@@ -10,7 +10,7 @@ export default function Home() {
     }, [])
 
     async function fetchData() {
-        const result = await fetch(`/products`, {
+        const result = await fetch(`/api/products`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

@@ -17,7 +17,7 @@ export default function SecretPasswor({ variantID, callBack }) {
             "id": variantID
         }
         try {
-            const result = await fetch('/init', {
+            const result = await fetch('/api/init', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -45,7 +45,7 @@ export default function SecretPasswor({ variantID, callBack }) {
             "id": variantID,
             "password": guessedPW
         }
-        const result = await fetch('/attempt', {
+        const result = await fetch('/api/attempt', {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

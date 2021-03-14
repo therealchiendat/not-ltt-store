@@ -26,7 +26,7 @@ const sessionOptions = {
 app.use(session(sessionOptions))
 
 //Default endpoint. Generates a password for the session if not already created
-app.post('/init', function (req, res, next) {
+app.post('api/init', function (req, res, next) {
     // Access the session as req.session
     console.log(req.session.userSession);
     const variantID = req.body.id;
@@ -69,7 +69,7 @@ app.post('/init', function (req, res, next) {
  * Expects the password attempt in the body. 
  * Returns HIGH, LOW or SUCCESS
  * */
-app.post('/attempt', async function (req, res, next) {
+app.post('api/attempt', async function (req, res, next) {
     console.log('attempt--');
     console.log(req.session.userSession)
     console.log(req.body);
@@ -111,7 +111,7 @@ app.post('/attempt', async function (req, res, next) {
 
 })
 
-app.get("/products", async (req, res) => {
+app.get("api/products", async (req, res) => {
     try {
         const shopifyResult = await fetch(`https://not-ltt-store.myshopify.com/admin/api/2021-01/products.json`, {
             method: "GET",
@@ -190,7 +190,7 @@ async function draftOrder(variantID, quantity) {
     }
 }
 
-app.get("/products/:id", async (req, res) => {
+app.get("api/products/:id", async (req, res) => {
     // Retrieve the tag from our URL path
     const product_id = req.params.id;
     try {
@@ -236,6 +236,9 @@ app.get("/products/:id", async (req, res) => {
     }
 
 });
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'client/build')));
 
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.

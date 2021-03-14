@@ -21,7 +21,7 @@ export default function Item() {
     }, [])
 
     async function fetchData() {
-        const result = await fetch(`/products\\${id}`, {
+        const result = await fetch(`/api/products\\${id}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
