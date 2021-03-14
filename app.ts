@@ -5,8 +5,7 @@ const bodyParser = require('body-parser')
 const session = require('express-session');
 const { request } = require('express');
 const dotenv = require('dotenv').config();
-const cookie = require('cookie');
-const nonce = require('nonce');
+const cors = require('cors');
 const MongoStore = require('connect-mongo');
 
 const appPassword = process.env.SHOPIFY_APP_PASSWORD;
@@ -15,6 +14,10 @@ const app = express()
 
 // process.env.PORT lets the port be set by Heroku
 const port = process.env.PORT || 8080;
+
+// Allow CORS
+app.use(cors());
+app.options('*', cors());
 
 app.use(bodyParser.json())
 
